@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Navidad y Año Nuevo 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;    
+            justify-content: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            color: #ffffff;
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 100;
+            letter-spacing: 8px;
+            z-index: 10;
+            text-transform: uppercase;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            animation: fadeIn 2s ease-in;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #fbbf24, transparent);
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #canvas {
+            background: #0a0a0a;
+        }
+
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        @keyframes fireworkAnimation {
+            0% {
+                transform: translate(0, 0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>¡FELIZ NAVIDAD y AÑO NUEVO 2025!</h1>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = 600;
+        canvas.height = 600;
+
+        // Dibujar árbol de navidad con una sola línea en espiral (animado)
+        let currentPoint = 0;
+        const totalPoints = 500;
+        const centerX = 300;
+        const baseY = 520;
+        const topY = 180;
+        const height = baseY - topY;
+        const spiralTurns = 15;
+        
+        // Variables para el tronco
+        let trunkCurrentPoint = 0;
+        const trunkTotalPoints = 200;
+        const trunkTop = 520;
+        const trunkBottom = 580;
+        const trunkHeight = trunkBottom - trunkTop;
+        const trunkWidth = 30;
+        
+        // Variables para la estrella
+        let starProgress = 0;
+        const starTotalPoints = 10;
+        const starX = 300;
+        const starY = 170;
+        
+        // Variables para nieve
+        const snowflakes = [];
+        for (let i = 0; i < 100; i++) {
+            snowflakes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speed: Math.random() * 1 + 0.5,
+                drift: Math.random() * 0.5 - 0.25
+            });
+        }
+        
+        // Variables para estrellas titilantes
+        const stars = [];
+        for (let i = 0; i < 50; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * 200,
+                radius: Math.random() * 1.5 + 0.5,
+                opacity: Math.random(),
+                twinkleSpeed: Math.random() * 0.03 + 0.01
+            });
+        }
+        
+        // Variables para la luna
+        const moonX = 500;
+        const moonY = 80;
+        const moonRadius = 35;
+        let moonGlow = 0;
+        let moonGlowDirection = 1;
+        
+        // Variables para renos de Santa
+        const reindeer = [];
+        const reindeerCount = 5;
+        for (let i = 0; i < reindeerCount; i++) {
+            reindeer.push({
+                x: -100 - (i * 40),
+                y: 120 + Math.random() * 80,
+                speed: 1.5 + Math.random() * 0.5,
+                size: 15,
+                legPhase: Math.random() * Math.PI * 2
+            });
+        }
+        
+        // Música de fondo 
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let musicStarted = false;
+        
+        function startAmbientMusic() {
+            if (musicStarted) return;
+            musicStarted = true;
+            
+            const playNote = (frequency, startTime, duration) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.03, startTime + 0.5);
+                gainNode.gain.linearRampToValueAtTime(0.02, startTime + duration - 0.5);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + duration);
+            };
+            
+            // Secuencia de notas suaves (Do, Mi, Sol en diferentes octavas)
+            const notes = [261.63, 329.63, 392.00, 523.25];
+            let time = audioContext.currentTime;
+            
+            const playSequence = () => {
+                time = audioContext.currentTime;
+                notes.forEach((note, index) => {
+                    playNote(note, time + index * 3, 2.5);
+                });
+                setTimeout(playSequence, 12000);
+            };
+            
+            playSequence();
+        }
+        
+        // Dibujar luna con brillo
+        function drawMoon() {
+            // Brillo de la luna
+            const gradient = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.3, moonX, moonY, moonRadius + 15 + moonGlow);
+            gradient.addColorStop(0, 'rgba(255, 255, 200, 0.8)');
+            gradient.addColorStop(0.4, 'rgba(255, 255, 150, 0.4)');
+            gradient.addColorStop(0.7, 'rgba(255, 255, 100, 0.2)');
+            gradient.addColorStop(1, 'rgba(255, 255, 50, 0)');
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, moonRadius + 15 + moonGlow, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Luna
+            ctx.fillStyle = '#FFF8DC';
+            ctx.beginPath();
+            ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Cráteres
+            ctx.fillStyle = 'rgba(200, 200, 180, 0.3)';
+            ctx.beginPath();
+            ctx.arc(moonX - 8, moonY - 5, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(moonX + 10, moonY + 8, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(moonX - 5, moonY + 12, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Animar brillo
+            moonGlow += 0.05 * moonGlowDirection;
+            if (moonGlow > 5 || moonGlow < 0) {
+                moonGlowDirection *= -1;
+            }
+        }
+        
+        // Dibujar estrellas titilantes
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Efecto de cruz para estrellas más grandes
+                if (star.radius > 1 && star.opacity > 0.7) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${star.opacity * 0.5})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(star.x - star.radius * 2, star.y);
+                    ctx.lineTo(star.x + star.radius * 2, star.y);
+                    ctx.moveTo(star.x, star.y - star.radius * 2);
+                    ctx.lineTo(star.x, star.y + star.radius * 2);
+                    ctx.stroke();
+                }
+                
+                // Titilar
+                star.opacity += star.twinkleSpeed;
+                if (star.opacity > 1 || star.opacity < 0.2) {
+                    star.twinkleSpeed *= -1;
+                }
+            });
+        }
+        
+        // Dibujar nieve
+        function drawSnow() {
+            snowflakes.forEach(flake => {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Mover copo de nieve
+                flake.y += flake.speed;
+                flake.x += flake.drift;
+                
+                // Reiniciar cuando sale de la pantalla
+                if (flake.y > canvas.height) {
+                    flake.y = 0;
+                    flake.x = Math.random() * canvas.width;
+                }
+                if (flake.x > canvas.width) {
+                    flake.x = 0;
+                } else if (flake.x < 0) {
+                    flake.x = canvas.width;
+                }
+            });
+        }
+        
+        // Dibujar renos de Santa
+        function drawReindeer() {
+            reindeer.forEach(deer => {
+                ctx.save();
+                
+                // Cuerpo
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(deer.x, deer.y, deer.size * 1.5, deer.size);
+                
+                // Cabeza
+                ctx.fillRect(deer.x + deer.size * 1.5, deer.y - deer.size * 0.3, deer.size, deer.size * 0.8);
+                
+                // Cuello
+                ctx.fillRect(deer.x + deer.size * 1.3, deer.y, deer.size * 0.4, deer.size * 0.5);
+                
+                // Astas
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(deer.x + deer.size * 1.8, deer.y - deer.size * 0.3);
+                ctx.lineTo(deer.x + deer.size * 1.7, deer.y - deer.size * 0.8);
+                ctx.lineTo(deer.x + deer.size * 1.5, deer.y - deer.size * 0.6);
+                ctx.moveTo(deer.x + deer.size * 1.7, deer.y - deer.size * 0.8);
+                ctx.lineTo(deer.x + deer.size * 1.9, deer.y - deer.size * 0.6);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(deer.x + deer.size * 2.2, deer.y - deer.size * 0.3);
+                ctx.lineTo(deer.x + deer.size * 2.3, deer.y - deer.size * 0.8);
+                ctx.lineTo(deer.x + deer.size * 2.1, deer.y - deer.size * 0.6);
+                ctx.moveTo(deer.x + deer.size * 2.3, deer.y - deer.size * 0.8);
+                ctx.lineTo(deer.x + deer.size * 2.5, deer.y - deer.size * 0.6);
+                ctx.stroke();
+                
+                // Nariz (roja para Rudolph en el primero)
+                ctx.fillStyle = reindeer.indexOf(deer) === 0 ? '#ff0000' : '#000000';
+                ctx.beginPath();
+                ctx.arc(deer.x + deer.size * 2.5, deer.y + deer.size * 0.2, deer.size * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Patas con animación
+                const legOffset = Math.sin(deer.legPhase) * deer.size * 0.3;
+                ctx.fillStyle = '#8B4513';
+                
+                // Patas delanteras
+                ctx.fillRect(deer.x + deer.size * 1.2, deer.y + deer.size, deer.size * 0.2, deer.size * 0.5 + legOffset);
+                ctx.fillRect(deer.x + deer.size * 1.5, deer.y + deer.size, deer.size * 0.2, deer.size * 0.5 - legOffset);
+                
+                // Patas traseras
+                ctx.fillRect(deer.x + deer.size * 0.3, deer.y + deer.size, deer.size * 0.2, deer.size * 0.5 - legOffset);
+                ctx.fillRect(deer.x + deer.size * 0.6, deer.y + deer.size, deer.size * 0.2, deer.size * 0.5 + legOffset);
+                
+                ctx.restore();
+                
+                // Mover reno
+                deer.x += deer.speed;
+                deer.legPhase += 0.2;
+                
+                // Reiniciar cuando sale de la pantalla
+                if (deer.x > canvas.width + 50) {
+                    deer.x = -100;
+                    deer.y = 120 + Math.random() * 80;
+                }
+            });
+        }
+        
+        function drawTree() {
+            if (currentPoint > totalPoints && trunkCurrentPoint > trunkTotalPoints && starProgress > starTotalPoints) return;
+            
+            // Dibujar espiral del árbol con gradiente
+            if (currentPoint <= totalPoints) {
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                for (let i = 0; i < currentPoint; i++) {
+                    const progress = i / totalPoints;
+                    const nextProgress = (i + 1) / totalPoints;
+                    
+                    // Gradiente de verde oscuro en la base a verde claro en la punta
+                    const greenValue = Math.floor(34 + (progress * 80));
+                    const brightValue = Math.floor(197 + (progress * 40));
+                    ctx.strokeStyle = `rgb(${greenValue}, ${brightValue}, 94)`;
+                    
+                    // La Y va de abajo hacia arriba
+                    const y = baseY - (progress * height);
+                    const nextY = baseY - (nextProgress * height);
+                    
+                    // El radio disminuye conforme subimos (forma de árbol)
+                    const maxRadius = 150 - (progress * 130);
+                    const nextMaxRadius = 150 - (nextProgress * 130);
+                    
+                    // Ángulo de la espiral
+                    const angle = progress * spiralTurns * Math.PI * 2;
+                    const nextAngle = nextProgress * spiralTurns * Math.PI * 2;
+                    
+                    // Calcular posición X con la espiral
+                    const x = centerX + Math.cos(angle) * maxRadius;
+                    const nextX = centerX + Math.cos(nextAngle) * nextMaxRadius;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+                
+                currentPoint += 4;
+                
+                // Fuegos artificiales cuando se completa el árbol
+                if (currentPoint === totalPoints) {
+                    for (let i = 0; i < 4; i++) {
+                        setTimeout(() => {
+                            createFirework(100 + Math.random() * 400, 100 + Math.random() * 200, '#22c55e');
+                        }, i * 250);
+                    }
+                }
+            } else {
+                // Mantener el árbol dibujado con gradiente
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                for (let i = 0; i < totalPoints; i++) {
+                    const progress = i / totalPoints;
+                    const nextProgress = (i + 1) / totalPoints;
+                    
+                    const greenValue = Math.floor(34 + (progress * 80));
+                    const brightValue = Math.floor(197 + (progress * 40));
+                    ctx.strokeStyle = `rgb(${greenValue}, ${brightValue}, 94)`;
+                    
+                    const y = baseY - (progress * height);
+                    const nextY = baseY - (nextProgress * height);
+                    const maxRadius = 150 - (progress * 130);
+                    const nextMaxRadius = 150 - (nextProgress * 130);
+                    const angle = progress * spiralTurns * Math.PI * 2;
+                    const nextAngle = nextProgress * spiralTurns * Math.PI * 2;
+                    const x = centerX + Math.cos(angle) * maxRadius;
+                    const nextX = centerX + Math.cos(nextAngle) * nextMaxRadius;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+                
+                // Dibujar tronco con líneas en espiral 
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                for (let i = 0; i < Math.min(trunkCurrentPoint, trunkTotalPoints); i++) {
+                    const progress = i / trunkTotalPoints;
+                    const nextProgress = (i + 1) / trunkTotalPoints;
+                    
+                    // Gradiente de café
+                    const brownValue = Math.floor(120 - (progress * 30));
+                    ctx.strokeStyle = `rgb(${brownValue}, ${Math.floor(brownValue * 0.6)}, ${Math.floor(brownValue * 0.2)})`;
+                    
+                    const y = trunkTop + (progress * trunkHeight);
+                    const nextY = trunkTop + (nextProgress * trunkHeight);
+                    
+                    const angle = progress * 8 * Math.PI * 2;
+                    const nextAngle = nextProgress * 8 * Math.PI * 2;
+                    
+                    const radius = trunkWidth / 2;
+                    
+                    const x = centerX + Math.cos(angle) * radius;
+                    const nextX = centerX + Math.cos(nextAngle) * radius;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+                
+                if (trunkCurrentPoint <= trunkTotalPoints) {
+                    trunkCurrentPoint += 3;
+                    // Fuegos artificiales cuando se completa el tronco
+                    if (trunkCurrentPoint === trunkTotalPoints) {
+                        for (let i = 0; i < 3; i++) {
+                            setTimeout(() => {
+                                createFirework(100 + Math.random() * 400, 100 + Math.random() * 150);
+                            }, i * 300);
+                        }
+                    }
+                } else {
+                    // Dibujar estrella animada
+                    if (starProgress <= starTotalPoints) {
+                        const spikes = 5;
+                        const outerRadius = 14;
+                        const innerRadius = 6;
+                        let rot = Math.PI / 2 * 3;
+                        const step = Math.PI / spikes;
+                        
+                        ctx.strokeStyle = '#fbbf24';
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.lineWidth = 2;
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(starX, starY - outerRadius);
+                        
+                        const pointsToDraw = Math.min(starProgress, spikes * 2);
+                        
+                        for (let i = 0; i < pointsToDraw; i++) {
+                            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                            const x = starX + Math.cos(rot) * radius;
+                            const y = starY + Math.sin(rot) * radius;
+                            ctx.lineTo(x, y);
+                            rot += step;
+                        }
+                        
+                        ctx.stroke();
+                        
+                        if (starProgress >= starTotalPoints) {
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                        
+                        starProgress += 0.5;
+                        
+                        // Fuegos artificiales cuando se completa la estrella
+                        if (starProgress === starTotalPoints) {
+                            for (let i = 0; i < 5; i++) {
+                                setTimeout(() => {
+                                    createFirework(150 + Math.random() * 300, 50 + Math.random() * 100, '#fbbf24');
+                                }, i * 200);
+                            }
+                        }
+                    } else {
+                        // Mantener la estrella completa
+                        drawStar(starX, starY, 5, 14, 6, '#fbbf24');
+                    }
+                }
+            }
+        }
+        
+        // Animación del árbol
+        const drawInterval = setInterval(() => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawMoon();
+            drawStars();
+            drawReindeer();
+            drawTree();
+            drawSnow();
+            
+            if (currentPoint > totalPoints && trunkCurrentPoint > trunkTotalPoints && starProgress > starTotalPoints) {
+                clearInterval(drawInterval);
+                // Continuar animando luna, estrellas y nieve después del árbol
+                startContinuousAnimation();
+            }
+        }, 20);
+        
+        // Animación continua después de que el árbol termine
+        function startContinuousAnimation() {
+            setInterval(() => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawMoon();
+                drawStars();
+                drawReindeer();
+                
+                // Redibujar el árbol completo 
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                for (let i = 0; i < totalPoints; i++) {
+                    const progress = i / totalPoints;
+                    const nextProgress = (i + 1) / totalPoints;
+                    
+                    const greenValue = Math.floor(34 + (progress * 80));
+                    const brightValue = Math.floor(197 + (progress * 40));
+                    ctx.strokeStyle = `rgb(${greenValue}, ${brightValue}, 94)`;
+                    
+                    const y = baseY - (progress * height);
+                    const nextY = baseY - (nextProgress * height);
+                    const maxTreeWidth = Math.min(canvas.width * 0.25, 150);
+                    const maxRadius = maxTreeWidth - (progress * (maxTreeWidth - 20));
+                    const nextMaxRadius = maxTreeWidth - (nextProgress * (maxTreeWidth - 20));
+                    const angle = progress * spiralTurns * Math.PI * 2;
+                    const nextAngle = nextProgress * spiralTurns * Math.PI * 2;
+                    const x = centerX + Math.cos(angle) * maxRadius;
+                    const nextX = centerX + Math.cos(nextAngle) * nextMaxRadius;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+                
+                // Redibujar tronco
+                for (let i = 0; i < trunkTotalPoints; i++) {
+                    const progress = i / trunkTotalPoints;
+                    const nextProgress = (i + 1) / trunkTotalPoints;
+                    
+                    const brownValue = Math.floor(120 - (progress * 30));
+                    ctx.strokeStyle = `rgb(${brownValue}, ${Math.floor(brownValue * 0.6)}, ${Math.floor(brownValue * 0.2)})`;
+                    
+                    const y = trunkTop + (progress * trunkHeight);
+                    const nextY = trunkTop + (nextProgress * trunkHeight);
+                    
+                    const angle = progress * 8 * Math.PI * 2;
+                    const nextAngle = nextProgress * 8 * Math.PI * 2;
+                    
+                    const radius = trunkWidth / 2;
+                    
+                    const x = centerX + Math.cos(angle) * radius;
+                    const nextX = centerX + Math.cos(nextAngle) * radius;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
+                }
+                
+                // Redibujar estrella
+                drawStar(starX, starY, 5, 14, 6, '#fbbf24');
+                
+                // Continuar nieve animada
+                drawSnow();
+            }, 20);
+        }
+
+        // Dibujar estrella
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Crear fuegos artificiales
+        function createFirework(x, y, color = null) {
+            const particles = 35;
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700', '#ff6b6b', '#4ecdc4', '#95e1d3'];
+            
+            for (let i = 0; i < particles; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.backgroundColor = color || colors[Math.floor(Math.random() * colors.length)];
+                particle.style.opacity = '0.8';
+                
+                const angle = (Math.PI * 2 * i) / particles;
+                const velocity = 40 + Math.random() * 70;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                particle.style.animation = 'fireworkAnimation 1.5s ease-out forwards';
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 1500);
+            }
+        }
+
+        // Fuegos artificiales automáticos (después de que termine el árbol)
+        setTimeout(() => {
+            setInterval(() => {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * (window.innerHeight / 2);
+                createFirework(x, y);
+            }, 1200);
+            
+            // Segundo conjunto de fuegos artificiales simultáneos
+            setTimeout(() => {
+                setInterval(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * (window.innerHeight / 2);
+                    createFirework(x, y);
+                }, 1200);
+            }, 600);
+        }, 4000);
+        
+        // Click para crear fuegos artificiales
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            createFirework(x, y);
+            
+            if (!musicStarted) {
+                startAmbientMusic();
+            }
+        });
+        
+        // Iniciar música automáticamente después de un tiempo
+        setTimeout(() => {
+            startAmbientMusic();
+        }, 5000);
+    </script>
+</body>
+</html>

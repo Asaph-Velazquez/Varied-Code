@@ -1,0 +1,91 @@
+# Project-specific files
+*_e.bmp
+*_e_d.bmp
+*_e.txt
+*_e_d.txt
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+*.class
+*.jar
+*.war
+*.ear
+out/
+
+# IDE - VS Code
+.vscode/
+.classpath
+.project
+.settings/
+*.code-workspace
+
+# IDE - Eclipse
+.metadata/
+.recommenders/
+
+# IDE - NetBeans
+nbproject/
+build/
+dist/
+nbbuild/
+nbdist/
+.nb-gradle/
+*.nbfs
+*.nbattrs
+private/
+catalog.xml
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Compiled and packaged
+*.class
+*.jar
+*.war
+*.exe
+*.o
+*.so
+*.dll
+*.dylib
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+
+# Node 
+node_modules/
+npm-debug.log
+
+# Python bytecode 
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python

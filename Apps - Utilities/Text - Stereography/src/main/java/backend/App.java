@@ -6,6 +6,7 @@ import javafx.concurrent.Worker;
 import javafx.scene.Scene;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import netscape.javascript.JSObject;
 
@@ -98,9 +99,18 @@ public class App extends Application {
                 System.arraycopy(modifiedPixels, 0, encryptedBmp, header.length, modifiedPixels.length);
 
                 String encryptedFileName = "Cifrado_" + new File(bmpFileName).getName();
-                File cipheredDir = new File("src/main/ciphered");
-                if (!cipheredDir.exists()) cipheredDir.mkdirs();
-                File outputFile = new File(cipheredDir, encryptedFileName);
+                
+                // Mostrar diálogo para seleccionar carpeta de guardado
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setTitle("Seleccionar carpeta para guardar archivo cifrado");
+                File selectedDirectory = directoryChooser.showDialog(primaryStage);
+                
+                if (selectedDirectory == null) {
+                    showAlert("Operación cancelada");
+                    return;
+                }
+                
+                File outputFile = new File(selectedDirectory, encryptedFileName);
                 Files.write(outputFile.toPath(), encryptedBmp);
 
                 String savedPath = outputFile.getAbsolutePath();
@@ -123,9 +133,28 @@ public class App extends Application {
                     return;
                 }
 
+                // Mostrar diálogo para seleccionar carpeta de guardado
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setTitle("Seleccionar carpeta para guardar mensaje descifrado");
+                File selectedDirectory = directoryChooser.showDialog(primaryStage);
+                
+                if (selectedDirectory == null) {
+                    showAlert("Operación cancelada");
+                    return;
+                }
+
+                // Guardar el mensaje descifrado en un archivo .txt
+                File decryptedFile = new File(selectedDirectory, "decryptedMessage.txt");
+                Files.write(decryptedFile.toPath(), decryptedMessage.getBytes());
+
+                String savedPath = decryptedFile.getAbsolutePath();
+                System.out.println("Mensaje descifrado guardado en: " + savedPath);
+
                 showSuccess("✓ Descifrado exitoso",
                     "Mensaje recuperado:\n\n\"" + decryptedMessage + "\"\n\n" +
-                    "Longitud: " + decryptedMessage.length() + " caracteres\n(Extraído automáticamente usando banderas)");
+                    "Longitud: " + decryptedMessage.length() + " caracteres\n" +
+                    "Archivo guardado como: decryptedMessage.txt\n" +
+                    "Ubicación: " + savedPath);
 
             } catch (Exception e) {
                 showAlert("Error al descifrar: " + e.getMessage());
